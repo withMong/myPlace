@@ -31,7 +31,8 @@ This repository is for a personal project.
 
 
 ## Architecture
-> Architecture diagram will be added.
+<img width="662" height="653" alt="image" src="https://github.com/user-attachments/assets/a2e69ae2-c1e0-498c-8862-8a6204b058c7" />
+
 
 ## Project Structure
 ```text
