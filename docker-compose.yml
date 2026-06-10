@@ -1,10 +1,10 @@
-name: ${COMPOSE_PROJECT_NAME:-de5-lite}
+name: ${COMPOSE_PROJECT_NAME:-seoul-subway}
 
 services:
   kafka:
     image: ${KAFKA_IMAGE:-apache/kafka:3.9.1}
     hostname: kafka
-    container_name: de5-kafka
+    container_name: subway-kafka
     extra_hosts:
       - "kafka:127.0.0.1"
     ports:
@@ -38,7 +38,7 @@ services:
 
   kafka-init:
     image: ${KAFKA_IMAGE:-apache/kafka:3.9.1}
-    container_name: de5-kafka-init
+    container_name: subway-kafka-init
     depends_on:
       kafka:
         condition: service_healthy
@@ -63,7 +63,7 @@ services:
   kafka-ui:
     image: ${KAFKA_UI_IMAGE:-provectuslabs/kafka-ui:latest}
     hostname: kafka-ui
-    container_name: de5-kafka-ui
+    container_name: subway-kafka-ui
     depends_on:
       kafka:
         condition: service_healthy
@@ -79,7 +79,7 @@ services:
   minio:
     image: ${MINIO_IMAGE:-minio/minio:latest}
     hostname: minio
-    container_name: de5-minio
+    container_name: subway-minio
     command: server /data --console-address ":9001"
     ports:
       - "9000:9000"
@@ -100,7 +100,7 @@ services:
 
   minio-init:
     image: ${MINIO_CLIENT_IMAGE:-minio/mc:latest}
-    container_name: de5-minio-init
+    container_name: subway-minio-init
     depends_on:
       minio:
         condition: service_healthy
@@ -127,7 +127,7 @@ services:
   iceberg-postgres:
     image: ${POSTGRES_IMAGE:-postgres:15-alpine}
     hostname: iceberg-postgres
-    container_name: de5-iceberg-postgres
+    container_name: subway-iceberg-postgres
     ports:
       - "${POSTGRES_HOST_PORT:-15432}:5432"
     environment:
@@ -148,7 +148,7 @@ services:
   iceberg-rest:
     image: ${ICEBERG_REST_IMAGE:-tabulario/iceberg-rest:1.6.0}
     hostname: iceberg-rest
-    container_name: de5-iceberg-rest
+    container_name: subway-iceberg-rest
     depends_on:
       iceberg-postgres:
         condition: service_healthy
@@ -184,7 +184,7 @@ services:
         FLINK_SHADED_HADOOP_VERSION: ${FLINK_SHADED_HADOOP_VERSION:-2.8.3-10.0}
     image: ${FLINK_IMAGE:-de5-flink:1.20.4-paimon}
     hostname: flink-jobmanager
-    container_name: de5-flink-jobmanager
+    container_name: subway-flink-jobmanager
     command: jobmanager
     ports:
       - "8081:8081"
@@ -208,7 +208,7 @@ services:
   flink-taskmanager:
     image: ${FLINK_IMAGE:-de5-flink:1.20.4-paimon}
     pull_policy: never
-    container_name: de5-flink-taskmanager
+    container_name: subway-flink-taskmanager
     command: taskmanager
     depends_on:
       - flink-jobmanager
@@ -233,7 +233,7 @@ services:
   flink-sql-client:
     image: ${FLINK_IMAGE:-de5-flink:1.20.4-paimon}
     pull_policy: never
-    container_name: de5-flink-sql-client
+    container_name: subway-flink-sql-client
     command: bin/sql-client.sh
     depends_on:
       flink-jobmanager:
@@ -263,7 +263,7 @@ services:
       args:
         CONFLUENT_KAFKA_VERSION: ${CONFLUENT_KAFKA_VERSION:-2.14.0}
     image: ${PRODUCER_IMAGE:-de5-producer:python3.12}
-    container_name: de5-kafka-producer
+    container_name: subway-kafka-producer
     depends_on:
       kafka-init:
         condition: service_completed_successfully
@@ -290,7 +290,7 @@ services:
       args:
         CONFLUENT_KAFKA_VERSION: ${CONFLUENT_KAFKA_VERSION:-2.14.0}
     image: ${SUBWAY_PRODUCER_IMAGE:-de5-subway-producer:python3.12}
-    container_name: de5-subway-producer
+    container_name: subway-producer
     depends_on:
       kafka-init:
         condition: service_completed_successfully
@@ -319,7 +319,7 @@ services:
       args:
         SPARK_BASE_IMAGE: ${SPARK_BASE_IMAGE:-apache/spark:3.5.6}
     image: ${SPARK_IMAGE:-de5-spark:3.5.6}
-    container_name: de5-spark-client
+    container_name: subway-spark-client
     command: ["sleep", "infinity"]
     depends_on:
       iceberg-rest:
@@ -343,7 +343,7 @@ services:
   starrocks-fe:
     image: ${STARROCKS_FE_IMAGE:-starrocks/fe-ubuntu:4.0-latest}
     hostname: starrocks-fe
-    container_name: de5-starrocks-fe
+    container_name: subway-starrocks-fe
     user: root
     command:
       - /bin/bash
@@ -384,7 +384,7 @@ services:
   starrocks-cn:
     image: ${STARROCKS_CN_IMAGE:-starrocks/cn-ubuntu:4.0-latest}
     hostname: starrocks-cn
-    container_name: de5-starrocks-cn
+    container_name: subway-starrocks-cn
     user: root
     command:
       - /bin/bash
@@ -419,7 +419,7 @@ services:
   airflow-postgres:
     image: ${AIRFLOW_DB_IMAGE:-postgres:15-alpine}
     hostname: airflow-postgres
-    container_name: de5-airflow-postgres
+    container_name: subway-airflow-postgres
     environment:
       POSTGRES_USER: ${AIRFLOW_DB_USER:-airflow}
       POSTGRES_PASSWORD: ${AIRFLOW_DB_PASSWORD:-airflow}
@@ -446,7 +446,7 @@ services:
         CONFLUENT_KAFKA_VERSION: ${CONFLUENT_KAFKA_VERSION:-2.14.0}
         OPENMETADATA_INGESTION_VERSION: ${OPENMETADATA_INGESTION_VERSION:-1.12.6.4}
     image: ${AIRFLOW_IMAGE:-de5-airflow:2.10.5}
-    container_name: de5-airflow-init
+    container_name: subway-airflow-init
     user: "0:0"
     depends_on:
       airflow-postgres:
@@ -483,7 +483,7 @@ services:
   airflow-webserver:
     image: ${AIRFLOW_IMAGE:-de5-airflow:2.10.5}
     pull_policy: never
-    container_name: de5-airflow-webserver
+    container_name: subway-airflow-webserver
     user: "0:0"
     command: webserver
     depends_on:
@@ -520,7 +520,7 @@ services:
   airflow-scheduler:
     image: ${AIRFLOW_IMAGE:-de5-airflow:2.10.5}
     pull_policy: never
-    container_name: de5-airflow-scheduler
+    container_name: subway-airflow-scheduler
     user: "0:0"
     command: scheduler
     depends_on:
