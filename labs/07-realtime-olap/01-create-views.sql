@@ -39,18 +39,23 @@ FROM paimon_catalog.bronze.subway_position_current
 WHERE line = '9호선';
 
 -- ---------------------------------------------------------------------
--- 1) 열차별 최신 위치 (실시간 노선도/지도 시각화의 핵심)
---    같은 열차의 여러 이벤트 중 가장 최근 수신 1건만 남긴다.
+-- 1) 열차별 최신 위치 = "현재 운행 중"인 열차 (실시간 노선도/KPI 의 핵심)
+--    열차번호별 가장 최근 1건만 남기되, current 테이블은 '오늘 운행한 모든 열차'가
+--    누적되므로 시간 창으로 막지 않으면 끝난 열차까지 세어 운행 대수가 부풀려진다.
+--    → 데이터의 최신 수신시각 기준 최근 3분 안에 관측된 열차만 '현재 운행'으로 본다.
+--      (producer 가 ~30초마다 폴링하므로 운행 중 열차는 매 폴링마다 잡힌다.)
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE VIEW v_train_latest AS
 SELECT *
 FROM (
   SELECT
     e.*,
-    ROW_NUMBER() OVER (PARTITION BY train_no ORDER BY recptn_ts DESC) AS rn
+    ROW_NUMBER() OVER (PARTITION BY train_no ORDER BY recptn_ts DESC) AS rn,
+    MAX(recptn_ts) OVER () AS data_latest
   FROM v_line9_events e
 ) t
-WHERE rn = 1;
+WHERE rn = 1
+  AND recptn_ts >= DATE_SUB(data_latest, INTERVAL 3 MINUTE);
 
 -- ---------------------------------------------------------------------
 -- 2) 실시간 운행 요약 (대시보드 상단 KPI 카드)
