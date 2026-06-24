@@ -565,29 +565,6 @@ services:
     profiles:
       - orchestration
 
-  # ── BI: 9호선 실시간 대시보드 (StarRocks 를 MySQL 프로토콜로 조회) ──
-  grafana:
-    image: ${GRAFANA_IMAGE:-grafana/grafana:11.3.0}
-    container_name: subway-grafana
-    depends_on:
-      starrocks-fe:
-        condition: service_healthy
-    ports:
-      - "${GRAFANA_PORT:-3000}:3000"
-    environment:
-      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
-      GF_USERS_ALLOW_SIGN_UP: "false"
-      GF_AUTH_ANONYMOUS_ENABLED: "true"
-    volumes:
-      - ./docker/grafana/provisioning:/etc/grafana/provisioning
-      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards
-      - grafana-data:/var/lib/grafana
-    networks:
-      - lakehouse
-    profiles:
-      - bi
-
   # ── Jupyter(PySpark): Iceberg Silver/Gold 직접 탐색·변환 ──
   jupyter:
     build:
@@ -657,4 +634,3 @@ volumes:
   starrocks-cn-storage:
   airflow-postgres-data:
   airflow-logs:
-  grafana-data:
