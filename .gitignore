@@ -3,11 +3,18 @@
 *.env
 !.env*.example
 
+# 수집 스케줄 스크립트 (API 키 포함) - 커밋 금지
+scripts/win/producer-rush.bat
+scripts/win/producer-offpeak.bat
+
 # Python
 __pycache__/
 *.py[cod]
 .venv/
 venv/
+
+# Jupyter 체크포인트 (자동생성)
+.ipynb_checkpoints/
 
 # Docker 볼륨 데이터
 data/sample/*.db

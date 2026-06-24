@@ -52,6 +52,7 @@ services:
           --topic ${KAFKA_TOPIC:-subway-events} \
           --partitions 3 \
           --replication-factor 1 \
+          --config retention.ms=2592000000 \
         && /opt/kafka/bin/kafka-topics.sh \
           --bootstrap-server kafka:19092 \
           --describe \
@@ -616,6 +617,29 @@ services:
       - lakehouse
     profiles:
       - notebook
+
+  # ── Streamlit BI: 배차 안정성 + freshness (StarRocks → Iceberg gold) ──
+  streamlit:
+    build:
+      context: .
+      dockerfile: docker/streamlit/Dockerfile
+    image: ${STREAMLIT_IMAGE:-de5-streamlit:py3.11}
+    container_name: subway-streamlit
+    depends_on:
+      starrocks-fe:
+        condition: service_healthy
+    environment:
+      STARROCKS_HOST: starrocks-fe
+      STARROCKS_PORT: "9030"
+      STARROCKS_USER: root
+    ports:
+      - "${STREAMLIT_PORT:-8501}:8501"
+    volumes:
+      - ./labs/15-streamlit:/app
+    networks:
+      - lakehouse
+    profiles:
+      - bi
 
 networks:
   lakehouse:
